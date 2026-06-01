@@ -1,0 +1,9 @@
+mutation,position,wildtype_aa,mutant_aa,ddG_kcal_mol,Tm_change_C,method,confidence
+S214H,214,S,H,-3.02,5.7,FoldX,high
+S238F,238,S,F,-2.87,5.3,ThermoMPNN,high
+F125W,125,F,W,-2.55,4.9,FoldX,high
+S121E,121,S,E,-2.41,4.8,FoldX,high
+H184Y,184,H,Y,-2.23,4.3,ThermoMPNN,high
+D186H,186,D,H,-2.18,4.1,ThermoMPNN,high
+F222W,222,F,W,-2.12,4.0,ThermoMPNN,high
+S121A,121,S,A,-2.04,3.8,FoldX,high
