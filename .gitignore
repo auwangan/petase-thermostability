@@ -41,3 +41,4 @@ Thumbs.db
 .env
 *.key
 *.pem
+literature/*.pdf
