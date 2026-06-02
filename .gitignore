@@ -17,7 +17,6 @@ env/
 ENV/
 
 # Data files (will be downloaded fresh, not committed)
-data/*.pdb
 data/*.fasta
 data/*.fa
 data/*.gz
