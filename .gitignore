@@ -42,3 +42,4 @@ Thumbs.db
 *.key
 *.pem
 literature/*.pdf
+*:Zone.Identifier
