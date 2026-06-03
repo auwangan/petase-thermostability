@@ -21,4 +21,4 @@ for seq_id, sequence in sequences.items():
         max_gc_content = gc_content
         max_gc_id = seq_id
 print(max_gc_id)
-print(max_gc_content)
+print(max_gc_content)   
