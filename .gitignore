@@ -42,3 +42,6 @@ Thumbs.db
 *.pem
 literature/*.pdf
 *:Zone.Identifier
+tools/foldx/foldx
+tools/foldx/foldx5_Linux.zip
+tools/foldx/yasaraPlugin.zip
