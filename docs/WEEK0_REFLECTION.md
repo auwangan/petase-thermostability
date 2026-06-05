@@ -1,3 +1,4 @@
+```markdown
 # Week 0 Reflection — Setup and Foundations
 
 **Dates:** May 27 – June 3, 2026
@@ -57,9 +58,12 @@
 
 ## Plan for Week 1
 
+[Brief — 3-5 bullets]
 - FoldX install (Days 8-9)
 - ThermoMPNN setup (Day 9-10)
 - Read Lu 2022 FAST-PETase paper (Day 13)
 - Friend joins Day 11
-- Practice habit: when claiming work is done, send evidence immediately (code/output/git log) without being asked
 - End of week: finalize Phase 1 scope
+```
+
+btw i did git push all of them i just didn't want to take ss
