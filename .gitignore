@@ -49,3 +49,9 @@ tools/foldx/foldx
 tools/foldx/foldx5_Linux.zip
 tools/foldx/yasaraPlugin.zip
 tools/ThermoMPNN/
+data/6eqe_Repair_1.pdb
+data/WT_6eqe_Repair_1.pdb
+data/Average_6eqe_Repair.fxout
+data/PdbList_6eqe_Repair.fxout
+data/Raw_6eqe_Repair.fxout
+data/Unrecognized_molecules.txt
