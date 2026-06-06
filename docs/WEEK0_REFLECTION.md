@@ -64,6 +64,3 @@
 - Read Lu 2022 FAST-PETase paper (Day 13)
 - Friend joins Day 11
 - End of week: finalize Phase 1 scope
-```
-
-btw i did git push all of them i just didn't want to take ss
