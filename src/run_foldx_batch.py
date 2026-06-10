@@ -1,8 +1,12 @@
 import pandas as pd
 import subprocess
 #Load the candidate mutations from data/phase1_candidates.csv
-candidates_df = pd.read_csv("data/phase1_candidates.csv")
+candidates_df = pd.read_csv("data/phase1_candidates_v2.csv")
 foldx_mutations = []
+import os
+for fpath in ["data/Dif_6eqe_Repair.fxout"]:
+    if os.path.exists(fpath):
+        os.remove(fpath)
 for index, row in candidates_df.iterrows():
     position = row["position"]
     wildtype = row["wildtype"]
@@ -13,19 +17,19 @@ print(foldx_mutations)
 with open("data/individual_list.txt", "w") as f:
     for m in foldx_mutations:
         f.write(m + "\n")
-#subprocess.run([
-#   "foldx",
-#  "--command=BuildModel",
-#    "--pdb=6eqe_Repair.pdb",
-#   "--pdb-dir=data/",
-#   "--mutant-file=data/individual_list.txt",
-#   "--output-dir=data/"
-#])
+subprocess.run([
+  "foldx",
+  "--command=BuildModel",
+    "--pdb=6eqe_Repair.pdb",
+   "--pdb-dir=data/",
+   "--mutant-file=data/individual_list.txt",
+   "--output-dir=data/"
+])
 #save it as csv
 foldx_df = pd.read_csv("data/Dif_6eqe_Repair.fxout", sep="\t", skiprows=8)
 print(foldx_df.columns.tolist())
 print(foldx_df.head(10))
-foldx_df = foldx_df.iloc[2:].reset_index(drop=True)
+foldx_df = foldx_df.reset_index(drop=True)
 print(foldx_df.shape)
 foldx_df["mutation_str"] = foldx_mutations
 # attach FoldX ddG alongside the candidate info (same order)
@@ -40,5 +44,5 @@ comparison = comparison.rename(columns={"ddG_pred": "thermompnn_ddg"})
 comparison = comparison.sort_values("foldx_ddg")
 
 print(comparison.to_string())
-comparison.to_csv("data/foldx_vs_thermompnn.csv", index=False)
+comparison.to_csv("data/foldx_vs_thermompnn_v2.csv", index=False)
 print(comparison.shape)          
