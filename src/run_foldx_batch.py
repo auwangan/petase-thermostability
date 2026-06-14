@@ -1,7 +1,7 @@
 import pandas as pd
 import subprocess
 #Load the candidate mutations from data/phase1_candidates.csv
-candidates_df = pd.read_csv("data/phase1_candidates_v2.csv")
+candidates_df = pd.read_csv("data/phase1_candidates_v3.csv")
 foldx_mutations = []
 import os
 for fpath in ["data/Dif_6eqe_Repair.fxout"]:
@@ -44,5 +44,5 @@ comparison = comparison.rename(columns={"ddG_pred": "thermompnn_ddg"})
 comparison = comparison.sort_values("foldx_ddg")
 
 print(comparison.to_string())
-comparison.to_csv("data/foldx_vs_thermompnn_v2.csv", index=False)
+comparison.to_csv("data/foldx_vs_thermompnn_v3.csv", index=False)
 print(comparison.shape)          

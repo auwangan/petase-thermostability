@@ -64,4 +64,3 @@ for residue in chain_a:
 df = DataFrame(rows)
 df.to_csv("data/residue_features.csv", index=False)
 print(df)
-
