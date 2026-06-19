@@ -2,7 +2,7 @@
 import os, subprocess
 import pandas as pd
 
-stack = ["NA233K", "TA77I", "AA179V", "RA260F", "QA119D", "QA127L"]   # validated + cleft-clean, spatially spread
+stack = ["NA233K", "TA77I", "AA179V", "RA260F", "QA119D"]
 individual = ",".join(stack) + ";"
 print("stack:", individual)
 
