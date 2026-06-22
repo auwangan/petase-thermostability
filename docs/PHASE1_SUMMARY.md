@@ -13,13 +13,7 @@ and a hydrophobicity score.
 state the specific anomaly or drop this note.
 
 ## 3. Consensus + hardening filter
-Candidates filtered by integrating ThermoMPNN ΔΔG with the structural features, then
-hardened with additional restrictions — notably excluding mutations that bury a charged
-residue in the core. Rationale: buried charges carry a desolvation penalty that FoldX's
-solvation/electrostatic terms under-weight, so FoldX overestimates the stability of
-charge-burying mutations; the filter hedges that weakness.
-⚠ Confirm this rationale matches your intent (see chat) — if unsure, state the filter
-operationally without the FoldX causal claim.
+Candidates filtered by integrating ThermoMPNN ΔΔG with the structural features, then hardened with additional restrictions — notably excluding mutations that bury a charged residue in the core. Buried-charge mutations are excluded as a conservative hedge: buried charges carry a desolvation penalty and are reliably destabilizing. Note: the precision test (V68D, I83R, I145D) found that *both* FoldX and ThermoMPNN penalize buried charges sharply — so this filter is a hedge, not a correction for a demonstrated FoldX over-stabilization bias.
 
 ## 4. Diagnostics — sign-convention correction
 A diagnostic pass caught a parameter error: the ThermoMPNN ΔΔG sign had been read
