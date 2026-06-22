@@ -1,78 +1,97 @@
-# Phase 1 Validation: Pipeline Calibration Against Known Stabilizers
+# Phase 1 Validation: Pipeline Calibration Against Known Mutations
 
-**Date:** 2026-06-21 (Week 3, Day 22)
-**Outcome:** 2 (mixed). No code bug; tool reliability limited on IsPETase. Proceed to Phase 2 with documented caveats.
+**Date:** 2026-06-21 (Day 22, recall) / 2026-06-22 (Day 23, precision)
+**Outcome:** 2 (mixed). No code bug. Pipeline is biased-conservative: poor recall, strong precision on confident negatives. Proceed to Phase 2 with documented caveats.
+**Repo commit:** `<FILL IN>`
 
 ---
 
 ## 1. Purpose
 
-Before committing Phase 2 compute (MD, docking), validate the corrected FoldX + ThermoMPNN consensus pipeline against mutations whose stabilizing effect is already known from the literature.
+Before committing Phase 2 compute (MD, docking), validate the corrected FoldX + ThermoMPNN consensus pipeline against mutations whose effect is already known — in **both** directions:
 
-Prior to this step the FoldX side of the pipeline had exactly **one** positive control (N233K). A residual bug in FoldX-side code (RepairPDB use, BuildModel parameters, `.fxout` parsing) would have been invisible. This step adds calibration points and asks a direct question: **does the pipeline recover known stabilizers?**
+- **Recall** — given known *stabilizers*, does the pipeline find them?
+- **Precision** — given known *destabilizers*, does the pipeline reject them?
+
+Prior to this, the FoldX side had exactly **one** positive control (N233K); a residual bug (RepairPDB, BuildModel parameters, `.fxout` parsing) would have been invisible.
 
 ## 2. Method
 
 - **Structure:** `6eqe_Repair.pdb` — IsPETase WT (PDB 6EQE is the Austin 2018 wild-type structure). Single chain A. Catalytic triad S160 / D206 / H237.
-- **Numbering:** PDB position = ThermoMPNN position + 29. Confirmed by FoldX (`ASNA233` → internal index 204) and by the N233K ThermoMPNN lookup.
+- **Numbering:** PDB position = ThermoMPNN position + 29. Confirmed by FoldX (`ASNA233` -> internal index 204) and by the N233K ThermoMPNN lookup.
 - **FoldX:** BuildModel, **1 run** (`numberOfRuns` default); parse `Dif_6eqe_Repair.fxout`. Negative total energy = stabilizing.
 - **ThermoMPNN:** site-saturation inference (`ThermoMPNN_inference_6eqe_Repair.csv`). Negative `ddG_pred` = stabilizing (sign convention corrected in Week 1).
-- **Reproduction check:** N233K re-run through the current script reproduced the stored value **bit-for-bit** (−0.685467 kcal/mol), confirming the script is deterministic and faithful before testing unknowns.
-- **Controls — two buckets:**
-  - **Stability bucket (verdict):** S121E, D186H, R280A (ThermoPETase) and R224Q (FAST-PETase), plus N233K (FAST-PETase, already validated). All are folding-stability mutations.
-  - **Cleft bucket (no verdict):** W159H, S238F (Austin 2018) — active-site-narrowing *activity* mutations, not folding stabilizers. FoldX/ThermoMPNN measure folding ΔΔG and are not expected to score these as stabilizing; included only to illustrate that the tools are blind to activity-driven effects.
+- **Reproduction check:** N233K re-run reproduced the stored value **bit-for-bit** (-0.685467 kcal/mol), confirming the script is deterministic and faithful before testing unknowns.
+- **Positive controls (recall) — two buckets:**
+  - **Stability bucket (verdict):** S121E, D186H, R280A (ThermoPETase) and R224Q (FAST-PETase), plus N233K (FAST-PETase, already validated). Folding-stability mutations.
+  - **Cleft bucket (no verdict):** W159H, S238F (Austin 2018) — active-site-narrowing *activity* mutations, not folding stabilizers. Included only to illustrate that the tools are blind to activity-driven effects.
+- **Negative controls (precision):** six deeply buried (RSA 0.00, core, not near active site) mutations selected as confident destabilizers — three **cavity-creating** (W257A, F106A, L101A) and three **charge-burial** (V68D, I83R, I145D).
 
 ## 3. Results
 
-### Stability bucket (negative = stabilizing)
+### 3a. Recall — known stabilizers (negative = stabilizing)
 
-| Mutation | FoldX ΔΔG | ThermoMPNN | FoldX | ThermoMPNN | Consensus |
+| Mutation | FoldX ddG | ThermoMPNN | FoldX | ThermoMPNN | Consensus |
 |---|---|---|:--:|:--:|:--:|
-| N233K | −0.685 | −1.198 | ✅ | ✅ | ✅ pass |
-| S121E | −0.444 | +0.022 | ✅ | ✗ | ✗ |
-| D186H | +0.526 | −0.512 | ✗ | ✅ | ✗ |
-| R224Q | +0.097 | +0.378 | ✗ | ✗ | ✗ |
-| R280A | +0.559 | −0.069 (≈0) | ✗ | ✗ | ✗ |
+| N233K | -0.685 | -1.198 | YES | YES | PASS |
+| S121E | -0.444 | +0.022 | YES | no | no |
+| D186H | +0.526 | -0.512 | no | YES | no |
+| R224Q | +0.097 | +0.378 | no | no | no |
+| R280A | +0.559 | -0.069 (approx 0) | no | no | no |
 
-**Recall on known stabilizers: FoldX 2/5 · ThermoMPNN 2/5 · Consensus 1/5 (N233K only).**
+**Recall on known stabilizers: FoldX 2/5 - ThermoMPNN 2/5 - Consensus 1/5 (N233K only).**
 
 The two methods are **anti-correlated on the misses**: where FoldX recovers a stabilizer (S121E) ThermoMPNN misses it, and vice versa (D186H). The only mutation both recover is N233K — the single control with direct wet-lab validation.
 
-### Cleft bucket (no verdict)
+**Cleft bucket (no verdict):** W159H (FoldX +3.743, ThermoMPNN +1.250) and S238F (FoldX -0.532, ThermoMPNN +0.054). Both behave as folding-non-stabilizers — expected, since these are activity mutations the tools cannot register.
 
-| Mutation | FoldX ΔΔG | ThermoMPNN | Note |
-|---|---|---|---|
-| W159H | +3.743 | +1.250 | Both score folding-destabilizing — expected; activity mutation, folding-costly (Trp→His). |
-| S238F | −0.532 | +0.054 | FoldX-favorable (added aromatic packing); ThermoMPNN ≈ neutral. Not a folding-stability signal. |
+### 3b. Precision — known destabilizers (positive = destabilizing = correctly rejected)
 
-Behaves as predicted: the tools do not register the activity benefit these mutations were designed for.
+| Mutation | Type | FoldX ddG | ThermoMPNN | Verdict |
+|---|---|---|---|:--:|
+| W257A | cavity | +5.13 | +3.75 | rejected |
+| F106A | cavity | +3.34 | +2.68 | rejected |
+| L101A | cavity | +3.79 | +2.34 | rejected |
+| V68D | charge burial | +4.45 | +3.26 | rejected |
+| I83R | charge burial | +11.81 | +2.79 | rejected |
+| I145D | charge burial | +4.26 | +2.91 | rejected |
+
+**False-positive rate: FoldX 0/6 - ThermoMPNN 0/6 - Consensus 0/6.**
+
+Both tools correctly flagged all six as destabilizing. FoldX penalized the bulky charge-burial I83R most heavily (+11.8). Unlike recall, the two methods **agree completely** on the negatives.
 
 ## 4. Interpretation
 
-- **No code bug.** N233K reproduces bit-for-bit, and both N233K and S121E are recovered in the correct direction. A systematic error (sign flip, wrong WT reference) would corrupt *all* cases, not 2 of 5. **This is Outcome 2 (mixed), not Outcome 3 (debug).**
-- **The tools are unreliable on IsPETase folding stability.** Each recovers only ~2/5 known stabilizers, and they disagree with each other. FoldX mis-signs 3 of 5 cases. The misses concentrate on **charge-altering surface mutations**, including two arginine removals (R224Q, R280A) — FoldX's documented weak spot (it over-penalizes loss of charged/salt-bridging residues and undercounts diffuse electrostatic / loop-rigidity stabilization).
-- **Recall was measured; precision was not.** Every control was a known stabilizer, so this experiment only tested whether the pipeline *finds* real stabilizers (recall: poor). It did **not** test whether mutations the pipeline *passes* are real (precision). Precision is the property relevant to the design's selected candidates, and it remains unmeasured.
-- **Consensus is conservative, not validating.** Requiring both tools to agree would have rejected **4 of 5 known stabilizers** (high false-negative rate). For a design filter this is the safe failure direction — but it means **"passed consensus" is weak positive evidence, not validation.**
+- **No code bug.** N233K reproduces bit-for-bit; both N233K and S121E are recovered in the correct direction; all six negatives are correctly rejected. A systematic error would corrupt all cases. **Outcome 2 (mixed), not Outcome 3 (debug).**
+- **The pipeline is biased-conservative — and recall and precision are two faces of the same bias.** FoldX leans toward predicting destabilization. That single tendency *lowers recall* (it under-calls real stabilizers, 2/5) and *protects precision* (a tool reluctant to say "stabilizing" rarely says it about a bad mutation, 0/6 false positives). Bad recall and good precision are the same coin.
+- **Why the methods disagree on recall but agree on precision.** Strong destabilization (cavities, buried charges) produces large, unambiguous energy penalties that both a physics model and an ML model catch every time. Real stabilization is small, distributed, and subtle — genuinely hard, and where the two methods diverge. The tools are **reliable at rejecting clearly-bad mutations, unreliable at finding good ones.**
+- **Consensus is a strict, precision-oriented filter.** It rejected 4/5 known stabilizers (high false-negative rate) *and* 6/6 confident destabilizers (zero false positives). For a candidate-selection filter this is the favorable error profile: it misses good mutations but does not wave through bad ones, so a mutation that *passes* consensus carries real (if not absolute) weight.
 
 ## 5. Limitations
 
-- **Controls are combinatorial-design singles.** S121E/D186H/R280A (ThermoPETase) and R224Q/N233K (FAST-PETase) were characterized primarily as parts of multi-mutation combinations, where the large Tm gains arise from synergy. Published *per-mutation* experimental ΔΔG is not in hand, so the magnitude of each miss cannot be quantified, and some individual effects may genuinely be small.
-- **FoldX at 1 run — no error bars.** Consistent with how the original single mutants were generated, but this conflicts with the "numberOfRuns=3" convention recorded in the handoff. A 3-run rerun is pending.
-- **Precision untested.** No negative controls (known destabilizers/neutrals) were run, so the false-positive rate of the pipeline is unknown.
+- **Negatives are *easy* cases.** Deeply buried cavity/charge-burial mutations carry large, obvious penalties. 0/6 here is necessary but **not sufficient** — it does not establish precision on *subtle* or *neutral* mutations, which remain untested. Failing even these would have been damning; passing them is reassuring but bounded.
+- **Precision is about direction, not magnitude.** Correctly signing destabilizers says nothing about the accuracy of a stabilizing *value*. The FoldX ddG magnitude (e.g. -6.57) remains unreliable.
+- **Recall controls are combinatorial-design singles.** ThermoPETase/FAST-PETase mutations were characterized mainly within multi-mutation combinations; no published *per-mutation* experimental ddG is in hand, so the magnitude of each miss cannot be quantified and some individual effects may genuinely be small.
+- **FoldX at 1 run — no error bars.** Consistent with how the original singles were generated, but conflicts with the handoff's "numberOfRuns=3" convention. A 3-run rerun is pending.
 
 ## 6. Implications for the lead candidate
 
-The 5-mutant lead (N233K / T77I / A179V / R260F / Q119D) was selected substantially on FoldX/ThermoMPNN consensus. Given the above:
+The 5-mutant lead (N233K / T77I / A179V / R260F / Q119D) was selected substantially on FoldX/ThermoMPNN consensus. Given both validation halves:
 
-- **The headline FoldX ΔΔG (−6.57 kcal/mol) is not a claimable result.** FoldX mis-signs 3 of 5 known cases on this protein; its ΔΔG on novel mutations is correspondingly unreliable as a magnitude or a guarantee.
-- **The lead is a candidate, not a validated design.** Honest description: *"Generated by FoldX/ThermoMPNN consensus, anchored on the experimentally-validated N233K mutation, pending MD and experimental validation."*
-- **Confidence rests on:** (1) the N233K experimental anchor, (2) consensus as a precision-oriented but *unquantified* filter, and (3) forthcoming Phase 2 MD. It does **not** rest on the FoldX ΔΔG magnitude.
+- **The headline FoldX ddG (-6.57 kcal/mol) is not a claimable result.** FoldX mis-signs 3 of 5 known stabilizers on this protein; its ddG magnitude on novel mutations is unreliable.
+- **But "passed consensus" now carries weight it did not two days ago.** The filter demonstrably rejects obvious destabilizers (0/6) and is strict (rejects 4/5 real stabilizers). A strict filter that does not accept bad mutations makes its rare positive verdicts — including the 5 candidates — meaningfully more credible. Confidence moved from *uninformative* to *weak-but-real positive evidence*.
+- **The lead is a candidate, not a validated design.** Honest description: *"Generated by FoldX/ThermoMPNN consensus, anchored on the experimentally-validated N233K mutation; the consensus filter rejects confident destabilizers (0/6) but its discrimination on subtle cases is untested. Pending MD and experimental validation."*
+- **Confidence rests on:** (1) the N233K experimental anchor, (2) consensus as a strict filter shown to reject easy negatives, and (3) forthcoming Phase 2 MD — **not** on the FoldX ddG magnitude.
 
 ## 7. Decision and next steps
 
 **Decision:** Outcome 2. Proceed to Phase 2 **with documented caveats** — not full-confidence production, not pipeline debugging.
 
 **Next steps (priority order):**
-1. **Precision / false-positive test** — run known destabilizing/neutral mutations through the consensus pipeline; measure how many are wrongly passed. This is the experiment that earns or refutes the claim that selected candidates are likely stabilizing.
-2. **3-run FoldX rerun** of the controls for error bars (defensibility).
-3. **Stronger controls** — identify ≥1 mutation with published *individual* experimental ΔΔG to anchor future calibration.
+1. **3-run FoldX rerun** of the recall + precision sets for error bars (defensibility for the writeup / Furst).
+2. **Subtle/neutral negatives** — extend the precision test beyond easy buried cases (surface mutations, conservative substitutions) to probe fine-grained discrimination.
+3. **Stronger positive controls** — identify >=1 mutation with published *individual* experimental ddG to anchor future calibration.
+
+---
+
+*Working draft. Verify every value against source files and edit into the author's own voice before committing.*
