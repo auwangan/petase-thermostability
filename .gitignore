@@ -57,3 +57,5 @@ data/Raw_6eqe_Repair.fxout
 data/Unrecognized_molecules.txt
 data/6eqe_Repair_*.pdb
 data/WT_6eqe_Repair_*.pdb
+data/alphafold/*.result.zip
+data/alphafold/*/*_env/
