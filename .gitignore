@@ -63,3 +63,5 @@ data/alphafold/*/*.a3m
 data/alphafold/*/*_unrelaxed_*.pdb
 data/alphafold/*/*_predicted_aligned_error_v1.json
 data/alphafold/*/*_scores_rank_00[2-5]_*.json
+data/md/*.pdb
+data/md/*.dcd
