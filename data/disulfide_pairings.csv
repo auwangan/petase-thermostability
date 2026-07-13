@@ -1,0 +1,192 @@
+A	30	ASN			A	33	ALA			+120.66	4.22	19.02
+	A	32	TYR			A	263	ASP	
+Helix AA7: α-helix, RH
++110.79	2.12	13.07
+	A	34	ARG			A	105	GLY	
+Helix AA3: α-helix, RH
+-90.48	3.14	12.27
+	A	43	LEU	
+Helix AA1: α-helix, RH
+A	252	LYS	
+Helix AA7: α-helix, RH
++99.69	2.48	11.55
+	A	48	GLY			A	103	SER	
+Helix AA3: α-helix, RH
++76.12	5.41	12.68
+	A	48	GLY			A	104	HIS	
+Helix AA3: α-helix, RH
+-73.64	2.84	12.79
+	A	50	PHE			A	71	PRO	
+Sheet AA1: strand 2 of 6, -1
++89.11	2.93	12.87
+	A	57	VAL			A	66	GLY	
+Sheet AA1: strand 2 of 6, -1
++100.12	2.38	13.28
+	A	64	GLY			A	112	ASP	
+Sheet AA1: strand 3 of 6, -1
+-93.81	2.03	11.14
+	A	65	ALA	
+Sheet AA1: strand 2 of 6, -1
+A	112	ASP	
+Sheet AA1: strand 3 of 6, -1
++106.84	6.30	10.44
+	A	69	TYR	
+Sheet AA1: strand 2 of 6, -1
+A	98	GLY	
+Helix AA3: α-helix, RH
+-87.18	3.71	10.84
+	A	69	TYR	
+Sheet AA1: strand 2 of 6, -1
+A	102	ALA	
+Helix AA3: α-helix, RH
++92.51	2.57	10.85
+	A	71	PRO	
+Sheet AA1: strand 2 of 6, -1
+A	74	ALA			+105.13	6.40	16.64
+	A	77	THR			A	150	ASP	
+Sheet AA1: strand 5 of 6, 1
++122.93	4.88	13.39
+	A	79	GLY	
+Sheet AA1: strand 4 of 6, 1
+A	153	ARG	
+Sheet AA1: strand 5 of 6, 1
++72.46	2.45	10.40
+	A	81	ILE	
+Sheet AA1: strand 4 of 6, 1
+A	155	GLY	
+Sheet AA1: strand 5 of 6, 1
++126.92	5.21	8.89
+	A	84	VAL	
+Sheet AA1: strand 4 of 6, 1
+A	158	GLY	
+Sheet AA1: strand 5 of 6, 1
+-71.36	3.69	8.73
+	A	85	PRO			A	89	ALA			+91.63	3.42	10.38
+	A	96	TRP	
+Helix AA3: α-helix, RH
+A	242	SER			+115.34	3.63	10.94
+	A	118	ASP			A	122	SER	
+Helix AA4: α-helix, RH
++112.31	2.68	11.70
+	A	120	PRO	
+Helix AA4: α-helix, RH
+A	164	GLY	
+Helix AA5: α-helix, RH
+-85.52	0.51	11.33
+	A	124	SER	
+Helix AA4: α-helix, RH
+A	165	GLY	
+Helix AA5: α-helix, RH
+-103.68	7.90	9.75
+	A	124	SER	
+Helix AA4: α-helix, RH
+A	168	ILE	
+Helix AA5: α-helix, RH
+-94.96	3.62	10.06
+	A	135	ALA	
+Helix AA4: α-helix, RH
+A	151	THR	
+Sheet AA1: strand 5 of 6, 1
++121.07	4.20	16.75
+	A	137	LEU	
+Helix AA4: α-helix, RH
+A	143	SER			-109.76	5.11	18.09
+	A	138	ASN	
+Helix AA4: α-helix, RH
+A	149	VAL	
+Sheet AA1: strand 5 of 6, 1
+-94.58	3.90	15.90
+	A	140	THR			A	143	SER			+121.39	3.70	20.33
+	A	155	GLY	
+Sheet AA1: strand 5 of 6, 1
+A	178	ALA	
+Sheet AA1: strand 6 of 6, 1
++118.99	5.94	9.65
+	A	156	VAL	
+Sheet AA1: strand 5 of 6, 1
+A	166	SER	
+Helix AA5: α-helix, RH
+-110.89	3.91	8.69
+	A	170	ALA	
+Helix AA5: α-helix, RH
+A	196	VAL			-103.00	2.29	11.34
+	A	178	ALA	
+Sheet AA1: strand 6 of 6, 1
+A	261	PHE	
+Helix AA7: α-helix, RH
+-104.70	4.89	10.84
+	A	182	GLN			A	201	PHE	
+Sheet AA2: strand 1 of 3, 0
+-92.58	3.38	9.24
+	A	182	GLN			A	240	ALA			+88.69	5.24	9.33
+	A	185	TRP			A	209	ALA			+93.47	2.42	14.94
+	A	189	THR			A	217	PRO	
+Helix AA6: α-helix, RH
++93.47	1.39	18.39
+	A	197	PRO			A	226	ALA			-105.10	7.56	11.55
+	A	197	PRO			A	261	PHE	
+Helix AA7: α-helix, RH
+-94.09	0.64	10.98
+	A	202	ALA	
+Sheet AA2: strand 1 of 3, 0
+A	215	ALA	
+Helix AA6: α-helix, RH
++104.23	2.96	12.03
+	A	202	ALA	
+Sheet AA2: strand 1 of 3, 0
+A	231	GLU	
+Sheet AA2: strand 2 of 3, 1
+-104.14	2.20	11.50
+	A	203	CYS	
+Sheet AA2: strand 1 of 3, 0
+A	206	ASP			+126.16	5.60	12.89
+	A	203	CYS	
+Sheet AA2: strand 1 of 3, 0
+A	239	CYS			-88.62	0.97	11.45
+	A	208	ILE			A	237	HIS			-111.25	2.50	13.55
+	A	209	ALA			A	214	SER	
+Helix AA6: α-helix, RH
++110.80	4.15	14.96
+	A	228	GLN	
+Sheet AA2: strand 2 of 3, 1
+A	286	THR	
+Sheet AA2: strand 3 of 3, -1
++119.24	2.71	11.71
+	A	229	PHE	
+Sheet AA2: strand 2 of 3, 1
+A	285	ARG	
+Sheet AA2: strand 3 of 3, -1
++100.38	6.14	12.44
+	A	231	GLU	
+Sheet AA2: strand 2 of 3, 1
+A	283	ASP	
+Sheet AA2: strand 3 of 3, -1
++81.88	5.14	13.03
+	A	232	ILE	
+Sheet AA2: strand 2 of 3, 1
+A	235	GLY			+70.09	5.40	13.69
+	A	233	ASN			A	282	SER	
+Sheet AA2: strand 3 of 3, -1
++96.63	3.79	14.90
+	A	238	SER			A	241	ASN			+125.86	3.16	11.49
+	A	256	ALA	
+Helix AA7: α-helix, RH
+A	271	PHE	
+Helix AA9: α-helix, RH
++73.37	1.50	11.31
+	A	259	LYS	
+Helix AA7: α-helix, RH
+A	268	TYR	
+Helix AA9: α-helix, RH
++107.47	5.04	11.91
+	A	260	ARG	
+Helix AA7: α-helix, RH
+A	272	ALA	
+Helix AA9: α-helix, RH
++85.40	1.23	11.53
+	A	273	CYS	
+Helix AA9: α-helix, RH
+A	289	CYS			-84.71	0.38	16.74
+	A	278	SER			A	281	VAL	
+Sheet AA2: strand 3 of 3, -1
++124.41	3.48	16.31

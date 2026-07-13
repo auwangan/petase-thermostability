@@ -7,6 +7,4 @@ Luis Serrano and Francois Stricher
 PDB file analysed: batch
 Output type: BuildModel
 Pdb	total energy	Backbone Hbond	Sidechain Hbond	Van der Waals	Electrostatics	Solvation Polar	Solvation Hydrophobic	Van der Waals clashes	entropy sidechain	entropy mainchain	sloop_entropy	mloop_entropy	cis_bond	torsional clash	backbone clash	helix dipole	water bridge	disulfide	electrostatic kon	partial covalent bonds	energy Ionisation	Entropy Complex
-6eqe_Repair_1_0.pdb	-3.55982	0.884583	-0.268792	-1.67807	-0.364776	-0.563118	-4.65447	3.03539	0.865763	-0.698516	0	0	0	-0.112382	0.250204	-0.00542911	0	0	0	0	0	0
-6eqe_Repair_1_1.pdb	-5.49099	0.874758	-0.597058	-1.58689	-0.225038	-0.606997	-4.49604	1.03436	0.73	-0.736015	0	0	0	0.132351	0.341424	-0.0144272	0	0	0	0	0	0
-6eqe_Repair_1_2.pdb	-4.05644	-0.477802	-0.0599019	-1.94009	-0.169467	-0.269848	-4.74359	2.89484	0.882128	-0.0617704	0	0	0	-0.0868235	0.658333	-0.024108	0	0	0	0	0	0
+6eqe_Repair_1.pdb	8.74656	2.81197	3.00957	1.18895	3.86565	-4.29835	0.131701	3.72202	-1.07155	-0.188062	0	0	0	-0.401421	0.165902	-0.0239136	0	0	0	0	0	0

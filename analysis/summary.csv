@@ -1,5 +1,0 @@
-run,mean_rmsd_A,plateau_rmsd_A,mean_rg_A
-mut_400K_rep1,2.091,2.372,38.406
-mut_400K_rep2,1.792,1.941,38.596
-wt_400K_rep1,1.833,2.291,37.534
-wt_400K_rep2,3.822,4.689,37.148

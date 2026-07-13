@@ -1,67 +1,11 @@
-# Python
+# trajectories & checkpoints (too big for git)
+*.dcd
+*.chk
+# solvated / minimized systems (regenerable, ~100 MB each)
+**/md/*_solvated.pdb
+**/md/*_minimized.pdb
+# FoldX bulk output
+archive/v1/foldx/
+# python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb_checkpoints
-
-# Virtual environments
-venv/
-env/
-.venv/
-ENV/
-
-# Data files (will be downloaded fresh, not committed)
-data/*.fasta
-data/*.fa
-data/*.gz
-data/*.h5
-
-# Large generated outputs
-figures/*.png
-figures/*.pdf
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# Secrets (never commit these)
-.env
-*.key
-*.pem
-literature/*.pdf
-*:Zone.Identifier
-tools/foldx/foldx
-tools/foldx/foldx5_Linux.zip
-tools/foldx/yasaraPlugin.zip
-tools/foldx/foldx
-tools/foldx/foldx5_Linux.zip
-tools/foldx/yasaraPlugin.zip
-tools/ThermoMPNN/
-data/6eqe_Repair_1.pdb
-data/WT_6eqe_Repair_1.pdb
-data/Average_6eqe_Repair.fxout
-data/PdbList_6eqe_Repair.fxout
-data/Raw_6eqe_Repair.fxout
-data/Unrecognized_molecules.txt
-data/6eqe_Repair_*.pdb
-data/WT_6eqe_Repair_*.pdb
-data/alphafold/*.result.zip
-data/alphafold/*/*_env/
-data/alphafold/*/*.a3m
-data/alphafold/*/*_unrelaxed_*.pdb
-data/alphafold/*/*_predicted_aligned_error_v1.json
-data/alphafold/*/*_scores_rank_00[2-5]_*.json
-data/md/*.pdb
-data/md/*.dcd
+*.pyc
