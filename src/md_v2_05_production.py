@@ -36,7 +36,7 @@ def main():
     p.add_argument("--temp", type=float, required=True)
     p.add_argument("--ns", type=float, required=True)
     p.add_argument("--rep", type=int, required=True)
-    p.add_argument("--tag", required=True, choices=["wt", "mut"])
+    p.add_argument("--tag", required=True, choices=["wt", "mut", "fast"])
     p.add_argument("--platform", default="CUDA")
     p.add_argument("--report-every", type=int, default=10000,
                    help="steps between frames (10000 * 2fs = 20 ps)")

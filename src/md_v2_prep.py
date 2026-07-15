@@ -32,7 +32,7 @@ def sg_dist(positions, topology, ra, rb):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="inp", required=True)
-    ap.add_argument("--tag", required=True, choices=["wt", "mut"])
+    ap.add_argument("--tag", required=True, choices=["wt", "mut", "fast"])
     ap.add_argument("--outdir", default="data/v2/structures")
     ap.add_argument("--platform", default="CPU")
     args = ap.parse_args()
