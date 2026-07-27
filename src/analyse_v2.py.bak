@@ -95,24 +95,10 @@ def main():
     frac_H = (dssp == "H").mean(axis=0)
     frac_E = (dssp == "E").mean(axis=0)
 
-
-    # --- SASA (Stockinger 5.4: MDTraj, every 100th frame) ---
-    print("  computing SASA (stride 100)...")
-    stride = 100 if traj.n_frames > 200 else 1
-    sasa_res = md.shrake_rupley(traj[::stride], mode="residue")   # nm^2
-    sasa_total = sasa_res.sum(axis=1)          # total SASA per analysed frame
-    sasa_mean_res = sasa_res.mean(axis=0)      # mean SASA per residue
-
     # --- write everything ---
     o = args.outdir
     np.savetxt(f"{o}/{args.tag}_Q.csv", np.c_[traj.time/1000.0, q],
                delimiter=",", header="time_ns,Q", comments="")
-    np.savetxt(f"{o}/{args.tag}_sasa.csv",
-               np.c_[np.arange(len(sasa_total))*stride, sasa_total],
-               delimiter=",", header="frame,sasa_total_nm2", comments="")
-    with open(f"{o}/{args.tag}_sasa_perres.csv", "w", newline="") as fh:
-        w = csv.writer(fh); w.writerow(["resid", "sasa_nm2"])
-        for r, v in zip(resids, sasa_mean_res): w.writerow([r, f"{v:.4f}"])
     np.savetxt(f"{o}/{args.tag}_rmsd.csv", np.c_[traj.time/1000.0, rmsd],
                delimiter=",", header="time_ns,rmsd_A", comments="")
     np.savetxt(f"{o}/{args.tag}_rg.csv", np.c_[traj.time/1000.0, rg],
@@ -129,9 +115,9 @@ def main():
     new = not os.path.exists(summary)
     with open(summary, "a", newline="") as fh:
         w = csv.writer(fh)
-        if new: w.writerow(["run", "mean_Q_final", "mean_rmsd_A", "mean_rg_A", "mean_sasa_nm2", "n_contacts", "n_frames"])
+        if new: w.writerow(["run", "mean_Q_final", "mean_rmsd_A", "mean_rg_A", "n_contacts", "n_frames"])
         w.writerow([args.tag, f"{q_final:.4f}", f"{rmsd.mean():.3f}",
-                    f"{rg.mean():.3f}", f"{sasa_total.mean():.2f}", len(pairs), traj.n_frames])
+                    f"{rg.mean():.3f}", len(pairs), traj.n_frames])
 
     print(f"  wrote Q / RMSD / Rg / RMSF / DSSP to {o}/  (appended {summary})")
     print(f"\n  >>> mean Q = {q_final:.4f}  <<<")
