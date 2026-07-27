@@ -1,97 +1,134 @@
-import argparse, os, sys, math, urllib.request
+import argparse, os, sys, urllib.request
+import numpy as np
 from pdbfixer import PDBFixer
 from openmm.app import PDBFile, ForceField, Modeller, Simulation, PME, HBonds
 from openmm import LangevinMiddleIntegrator, unit, Platform
  
-# --- Stockinger 5.2 parameters ---
-FF        = ("amber14-all.xml", "amber14/tip4pew.xml")   # GAFF/Amber14 + tip4p-Ew
-WATER     = "tip4pew"
-PAD       = 1.0 * unit.nanometer                          # "Box padding of 1 nm ... cubic box"
-IONIC     = 0.1 * unit.molar                              # "ionic strength of 0.1 M NaCl"
-PH        = 8.0                                           # "utilizing a pH 8"
-MIN_TOL   = 10.0 * unit.kilojoule_per_mole                # "minimized until 10 kJ/mole tolerance"
+FF       = ("amber14-all.xml", "amber14/tip4pew.xml")
+WATER    = "tip4pew"
+PAD      = 1.0 * unit.nanometer
+IONIC    = 0.1 * unit.molar
+PH       = 8.0
+MIN_TOL  = 10.0 * unit.kilojoule_per_mole / unit.nanometer   # FORCE units (OpenMM 8)
  
-NATIVE_SS = [(203, 239), (273, 289)]   # our numbering; verify against crystal numbering
- 
- 
-def fetch_pdb(pdb_id, path):
-    if os.path.exists(path):
-        print(f"[fetch] {path} already present"); return
-    url = f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb"
-    print(f"[fetch] {url}")
-    urllib.request.urlretrieve(url, path)
+# common range across 5XJH (30-292) and 7SH6 (29-289)
+RES_LO, RES_HI = 30, 289
+MAX_PARTICLES  = 70000        # sane upper bound for a 265-res protein + 1nm pad
  
  
-def ss_bonds(topology):
-    out = []
-    for a1, a2 in topology.bonds():
-        if a1.name == "SG" and a2.name == "SG":
-            out.append(tuple(sorted((int(a1.residue.id), int(a2.residue.id)))))
-    return sorted(out)
+def fetch(pdb_id, path):
+    if not os.path.exists(path):
+        url = f"https://files.rcsb.org/download/{pdb_id.upper()}.pdb"
+        print(f"[fetch] {url}")
+        urllib.request.urlretrieve(url, path)
+    else:
+        print(f"[fetch] {path} present")
+ 
+ 
+def drop_terminal_missing(fixer):
+    """Keep internal gap-filling; discard missing residues at chain termini."""
+    fixer.findMissingResidues()
+    chains = list(fixer.topology.chains())
+    removed = 0
+    for key in list(fixer.missingResidues.keys()):
+        chain = chains[key[0]]
+        n_res = len(list(chain.residues()))
+        if key[1] == 0 or key[1] == n_res:        # start or end of chain
+            del fixer.missingResidues[key]
+            removed += 1
+    print(f"[fix] dropped {removed} terminal missing-residue block(s); "
+          f"internal gaps to fill: {len(fixer.missingResidues)}")
+ 
+ 
+def trim_range(fixer, lo, hi):
+    """Delete residues outside [lo, hi] and any non-protein chains."""
+    to_delete = []
+    for chain in fixer.topology.chains():
+        for res in chain.residues():
+            try:
+                rid = int(res.id)
+            except ValueError:
+                to_delete.append(res); continue
+            if rid < lo or rid > hi:
+                to_delete.append(res)
+    if to_delete:
+        fixer.removeChains([])          # no-op, keeps API happy
+        modeller = Modeller(fixer.topology, fixer.positions)
+        modeller.delete(to_delete)
+        fixer.topology, fixer.positions = modeller.topology, modeller.positions
+    print(f"[fix] trimmed to residues {lo}-{hi}: "
+          f"{sum(1 for _ in fixer.topology.residues())} residues remain")
+ 
+ 
+def ss_bonds(top):
+    return sorted(tuple(sorted((int(a.residue.id), int(b.residue.id))))
+                  for a, b in top.bonds() if a.name == "SG" and b.name == "SG")
  
  
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pdb-id", required=True, help="e.g. 5XJH or 7SH6")
+    ap.add_argument("--pdb-id", required=True)
     ap.add_argument("--tag", required=True)
     ap.add_argument("--outdir", default="data/v3/structures")
     ap.add_argument("--platform", default="CPU")
-    args = ap.parse_args()
-    os.makedirs(args.outdir, exist_ok=True)
+    a = ap.parse_args()
+    os.makedirs(a.outdir, exist_ok=True)
  
-    raw = f"{args.outdir}/{args.pdb_id.lower()}_raw.pdb"
-    fetch_pdb(args.pdb_id, raw)
+    raw = f"{a.outdir}/{a.pdb_id.lower()}_raw.pdb"
+    fetch(a.pdb_id, raw)
  
-    print("=" * 60)
-    print(f"  V3 PREP [{args.tag}]  <- {args.pdb_id} (Stockinger protocol)")
-    print(f"  water {WATER} | ionic {IONIC} | pH {PH} | padding {PAD}")
-    print("=" * 60)
- 
-    # --- clean crystal: drop waters/ligands, fill missing atoms, protonate at pH 8 ---
+    print("=" * 62)
+    print(f"  V3 PREP [{a.tag}] <- {a.pdb_id}   (Stockinger protocol, fixed)")
+    print(f"  {WATER} | {IONIC} NaCl | pH {PH} | pad {PAD} | residues {RES_LO}-{RES_HI}")
+    print("=" * 62)
+
     fixer = PDBFixer(filename=raw)
-    fixer.removeHeterogens(keepWater=False)      # strip crystallographic waters + ligands
-    fixer.findMissingResidues()
+    fixer.removeHeterogens(keepWater=False)      # drop HOH, SO4, ligands
+    drop_terminal_missing(fixer)                 # FIX 1
     fixer.findMissingAtoms()
     fixer.addMissingAtoms()
-    fixer.addMissingHydrogens(PH)                # approximates their PROPKA/PDB2PQR pH 8
- 
-    ss = ss_bonds(fixer.topology)
-    print(f"\n[fix] SG-SG bonds found: {ss}")
+    fixer.addMissingHydrogens(PH)
+    # trim_range(fixer, RES_LO, RES_HI)  # disabled: breaks terminal capping            # FIX 3
+
     n_res = sum(1 for _ in fixer.topology.residues())
-    print(f"[fix] residues: {n_res}")
+    ids = [int(r.id) for r in fixer.topology.residues() if r.id.isdigit()]
+    print(f"[fix] residues {min(ids)}..{max(ids)}  (n={n_res})")
+    print(f"[fix] SG-SG bonds: {ss_bonds(fixer.topology)}")
  
-    # --- solvate (tip4p-Ew, cubic, 1 nm pad, 0.1 M NaCl) ---
+    pos = np.array(fixer.positions.value_in_unit(unit.nanometer))
+    ext = pos.max(0) - pos.min(0)
+    print(f"[fix] extent (nm): {ext.round(2)}")
+    if ext.max() > 8.0:
+        sys.exit(f"ABORT: extent {ext.max():.1f} nm too large - stray atoms remain.")
+ 
     ff = ForceField(*FF)
     modeller = Modeller(fixer.topology, fixer.positions)
-    print(f"\n[solvate] {WATER}, padding {PAD}, ionicStrength {IONIC}")
+    print(f"\n[solvate] {WATER}, pad {PAD}, {IONIC}")
     modeller.addSolvent(ff, model=WATER, padding=PAD,
                         ionicStrength=IONIC, neutralize=True)
     n_tot = modeller.topology.getNumAtoms()
-    n_prot = sum(1 for a in modeller.topology.atoms()
-                 if a.residue.name not in ("HOH","WAT","NA","CL"))
+    n_prot = sum(1 for at in modeller.topology.atoms()
+                 if at.residue.name not in ("HOH","WAT","NA","CL"))
     print(f"      protein {n_prot:,} / total {n_tot:,} particles")
-    print(f"      (tip4p-Ew has a virtual site per water -> ~33% more particles than tip3p)")
- 
-    # --- minimise to 10 kJ/mol tolerance ---
+    if n_tot > MAX_PARTICLES:                    # FIX 4
+        sys.exit(f"ABORT: {n_tot:,} particles > {MAX_PARTICLES:,}. "
+                 f"Box blow-up - do not send this to the GPU.")
     system = ff.createSystem(modeller.topology, nonbondedMethod=PME,
                              nonbondedCutoff=1.0*unit.nanometer, constraints=HBonds)
-    integ = LangevinMiddleIntegrator(303.15*unit.kelvin, 1.0/unit.picosecond,
-                                     0.002*unit.picoseconds)
-    sim = Simulation(modeller.topology, system, integ,
-                     Platform.getPlatformByName(args.platform))
+    sim = Simulation(modeller.topology, system,
+                     LangevinMiddleIntegrator(303.15*unit.kelvin, 1.0/unit.picosecond,
+                                              0.002*unit.picoseconds),
+                     Platform.getPlatformByName(a.platform))
     sim.context.setPositions(modeller.positions)
-    e0 = sim.context.getState(getEnergy=True).getPotentialEnergy()
-    print(f"\n[minimise] before {e0}")
-    sim.minimizeEnergy(tolerance=MIN_TOL)
+    print(f"\n[minimise] before {sim.context.getState(getEnergy=True).getPotentialEnergy()}")
+    sim.minimizeEnergy(tolerance=MIN_TOL)        # FIX 2
     st = sim.context.getState(getEnergy=True, getPositions=True)
     print(f"           after  {st.getPotentialEnergy()}")
  
-    out = f"{args.outdir}/{args.tag}_v3_min.pdb"
+    out = f"{a.outdir}/{a.tag}_v3_min.pdb"
     with open(out, "w") as fh:
         PDBFile.writeFile(modeller.topology, st.getPositions(), fh)
     print(f"\nWrote {out}")
-    print(f"  -> next: md_v3_equilibrate.py --structure {out} --tag {args.tag} --temp 303.15")
- 
- 
+
 if __name__ == "__main__":
     main()
