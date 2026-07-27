@@ -1,69 +1,92 @@
-import argparse, os, sys, time
+import argparse, os, time, sys
 from openmm.app import (PDBFile, ForceField, Simulation, PME, HBonds,
-                        StateDataReporter, DCDReporter, CheckpointReporter)
-from openmm import LangevinMiddleIntegrator, MonteCarloBarostat, Platform, unit
+                        StateDataReporter)
+from openmm import (LangevinMiddleIntegrator, MonteCarloBarostat,
+                    CustomExternalForce, Platform, unit)
  
-FF = ("amber14-all.xml", "amber14/tip4pew.xml")
-SOLVENT = ("HOH", "WAT", "NA", "CL", "K", "MG")
+FF        = ("amber14-all.xml", "amber14/tip4pew.xml")
+K_RESTR   = 100.0 * unit.kilojoule_per_mole / unit.angstrom**2   # their value
+BACKBONE  = ("N", "CA", "C", "O")
+NS_NVT    = 5.0
+NS_NPT    = 5.0
+NS_FREE   = 5.0
+ 
+ 
+def add_backbone_restraint(system, topology, positions, k):
+    """Harmonic position restraint on backbone atoms (periodic-safe)."""
+    force = CustomExternalForce("k*periodicdistance(x, y, z, x0, y0, z0)^2")
+    force.addGlobalParameter("k", k)
+    for p in ("x0", "y0", "z0"):
+        force.addPerParticleParameter(p)
+    n = 0
+    for atom in topology.atoms():
+        if atom.name in BACKBONE and atom.residue.name not in ("HOH","WAT","NA","CL"):
+            force.addParticle(atom.index, positions[atom.index].value_in_unit(unit.nanometer))
+            n += 1
+    idx = system.addForce(force)
+    return idx, n
  
  
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--structure", required=True, help="equilibrated PDB")
+    ap.add_argument("--structure", required=True)
     ap.add_argument("--tag", required=True)
-    ap.add_argument("--temp", type=float, required=True)
-    ap.add_argument("--rep", type=int, required=True)
-    ap.add_argument("--ns", type=float, default=100.0)
-    ap.add_argument("--frame-ps", type=float, default=5.0,
-                    help="ps between saved frames (paper: 2.0)")
-    ap.add_argument("--outdir", default="data/v3/md")
+    ap.add_argument("--temp", type=float, required=True, help="303.15 or 323.15")
+    ap.add_argument("--outdir", default="data/v3/equil")
     ap.add_argument("--platform", default="CUDA")
-    a = ap.parse_args()
-    os.makedirs(a.outdir, exist_ok=True)
+    args = ap.parse_args()
+    os.makedirs(args.outdir, exist_ok=True)
+    T = args.temp * unit.kelvin
+    tag = f"{args.tag}_{int(round(args.temp))}K"
  
-    T = a.temp * unit.kelvin
-    report_every = int(a.frame_ps / 0.002)
-    n_steps = int(a.ns * 1000 / 0.002)
-    out = f"{a.outdir}/v3_{a.tag}_{int(round(a.temp))}K_rep{a.rep}"
- 
-    pdb = PDBFile(a.structure)
+    pdb = PDBFile(args.structure)
     ff = ForceField(*FF)
     system = ff.createSystem(pdb.topology, nonbondedMethod=PME,
                              nonbondedCutoff=1.0*unit.nanometer, constraints=HBonds)
-    system.addForce(MonteCarloBarostat(1.0*unit.atmosphere, T))
- 
-    protein = [at.index for at in pdb.topology.atoms() if at.residue.name not in SOLVENT]
-    n_frames = n_steps // report_every
-    est_mb = n_frames * len(protein) * 12 / 1e6
+    r_idx, n_restr = add_backbone_restraint(system, pdb.topology, pdb.positions, K_RESTR)
  
     print("=" * 60)
-    print(f"  V3 PRODUCTION [{a.tag}] {a.temp} K  rep {a.rep}")
-    print(f"  structure    : {a.structure}")
-    print(f"  production   : {a.ns} ns ({n_steps:,} steps @ 2 fs)")
-    print(f"  frames       : every {a.frame_ps} ps -> {n_frames:,} frames")
-    print(f"  trajectory   : PROTEIN ONLY ({len(protein):,} of {pdb.topology.getNumAtoms():,})")
-    print(f"  est size     : ~{est_mb:.0f} MB")
+    print(f"  V3 EQUILIBRATION [{tag}]")
+    print(f"  structure   : {args.structure}")
+    print(f"  temperature : {args.temp} K")
+    print(f"  restraint   : {K_RESTR} on {n_restr} backbone atoms")
+    print(f"  stages      : {NS_NVT} ns NVT(restr) -> {NS_NPT} ns NPT(restr) -> {NS_FREE} ns free")
+    print(f"  total       : {NS_NVT+NS_NPT+NS_FREE} ns")
     print("=" * 60)
  
     integ = LangevinMiddleIntegrator(T, 1.0/unit.picosecond, 0.002*unit.picoseconds)
     sim = Simulation(pdb.topology, system, integ,
-                     Platform.getPlatformByName(a.platform))
+                     Platform.getPlatformByName(args.platform))
     sim.context.setPositions(pdb.positions)
-    sim.context.setVelocitiesToTemperature(T)      # per-replicate randomness
- 
-    sim.reporters.append(StateDataReporter(sys.stdout, report_every, step=True,
-        potentialEnergy=True, temperature=True, progress=True,
-        totalSteps=n_steps, speed=True, remainingTime=True))
-    sim.reporters.append(DCDReporter(out + ".dcd", report_every, atomSubset=protein))
-    sim.reporters.append(CheckpointReporter(out + ".chk", 250000))
+    sim.context.setVelocitiesToTemperature(T)
+    sim.reporters.append(StateDataReporter(sys.stdout, 25000, step=True,
+        potentialEnergy=True, temperature=True, speed=True))
  
     t0 = time.time()
-    sim.step(n_steps)
-    print(f"  done in {(time.time()-t0)/3600:.2f} h")
+    # --- stage 1: NVT, restrained ---
+    print(f"\n[1/3] NVT restrained, {NS_NVT} ns ...")
+    sim.step(int(NS_NVT * 1000 / 0.002))
  
-    with open(out + "_final.pdb", "w") as fh:
-        PDBFile.writeFile(pdb.topology, sim.context.getState(getPositions=True).getPositions(), fh)
-    print(f"Wrote {out}.dcd")
+    # --- stage 2: NPT, restrained ---
+    print(f"\n[2/3] NPT restrained (MC barostat 1 atm), {NS_NPT} ns ...")
+    system.addForce(MonteCarloBarostat(1.0*unit.atmosphere, T))
+    sim.context.reinitialize(preserveState=True)
+    sim.step(int(NS_NPT * 1000 / 0.002))
+ 
+    # --- stage 3: free NPT ---
+    print(f"\n[3/3] free NPT (restraints removed), {NS_FREE} ns ...")
+    sim.context.setParameter("k", 0.0)      # switch restraint off
+    sim.step(int(NS_FREE * 1000 / 0.002))
+ 
+    print(f"\n  equilibration done in {(time.time()-t0)/3600:.2f} h")
+ 
+    out = f"{args.outdir}/{tag}_equil.pdb"
+    st = sim.context.getState(getPositions=True)
+    with open(out, "w") as fh:
+        PDBFile.writeFile(pdb.topology, st.getPositions(), fh)
+    print(f"Wrote {out}")
+    print(f"  -> next: md_v3_production.py --structure {out} --tag {args.tag} "
+          f"--temp {args.temp} --rep 1..5")
  
  
 if __name__ == "__main__":
