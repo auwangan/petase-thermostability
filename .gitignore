@@ -9,3 +9,4 @@ archive/v1/foldx/
 # python
 __pycache__/
 *.pyc
+tools/foldx/
